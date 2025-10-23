@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Voice Sample Recorder</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+ body {
+  margin: 0;
+  height: 100vh;
+  font-family: 'Segoe UI', sans-serif;
+  background: #f5f7fa;
+  overflow: hidden; /* dashboard handles scrolling */
+}
+
+/* ===== Header ===== */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: #0a74f6;
+  color: white;
+}
+header h1 {
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+}
+header h1 span { margin-left: 8px; }
+.profile-icon { cursor: pointer; font-size: 24px; }
+
+/* ===== Auth ===== */
+#auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 90vh;
+}
+.auth-box {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  width: 350px;
+  text-align: center;
+}
+.auth-box input, .auth-box select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+.auth-box button {
+  width: 100%;
+  padding: 12px;
+  background: #0a74f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.auth-box button:hover { background: #005ad1; }
+.switch-auth { margin-top: 10px; }
+.switch-auth a { color: #0a74f6; cursor: pointer; }
+
+/* ===== Dashboard Layout ===== */
+#dashboard {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  height: calc(100vh - 70px);
+  background: #f5f7fa;
+  gap: 40px;
+  padding: 30px;
+  box-sizing: border-box;
+}
+
+/* ===== Left Container ===== */
+.left-container {
+  flex: 0 0 45%;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  height: 80vh;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+}
+
+.right-container {
+  flex: 0 0 45%;
+  background: #ffffff;
+  border-radius: 12px;
+  height: 85vh;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column; /* stack sample and record sections vertically */
+  justify-content: flex-start;
+  align-items: center;
+  padding: 45px;
+  box-sizing: border-box;
+}
+
+.left-container h3 {
+  margin: 0 0 15px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #0a74f6;
+  text-align: center;
+}
+
+/* Recording items */
+
+.recording-item p {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  text-align: left;
+}
+
+.recording-set {
+  border: 2px solid #1E90FF; /* Dodger Blue border */
+  margin-bottom: 10px;
+  padding: 5px;
+  border-radius: 5px;
+  background-color: #f9f9f9; /* optional light background */
+}
+
+.recording-set.active {
+  background-color: #e0f0ff; /* slightly highlighted for current set */
+}
+
+.recording-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+}
+
+.recording-item span.number-label {
+  font-weight: bold;
+  min-width: 30px; /* space for number */
+  text-align: right;
+}
+
+.recording-item .info-wrapper {
+  display: flex;
+  flex-direction: column; /* filename on top, audio below */
+  flex: 1;
+}
+
+.recording-item .info-wrapper .filename {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.recording-item audio {
+  width: 100%;
+  margin: 0;
+}
+
+.recording-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.upload-btn {
+  background: #34A853;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.upload-btn:hover { background: #2d9248; }
+
+.delete-btn {
+  background: #EA4335;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.delete-btn:hover { background: #d32f2f; }
+
+.save-btn {
+  background: #0a74f6;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.save-btn:hover { background: #005ad1; }
+
+/* ===== Right Container (Main Sample Recorder) ===== */
+.main {
+  flex: 0 0 500px;
+  background: #fff;
+  border-radius: 12px;
+  height: 80vh; /* same height as left container */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 30px;
+  box-sizing: border-box;
+}
+/* Recorder wrapper */
+.recorder-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* Sample container inside right section */
+.sample-container {
+  width: 90%;
+  height: 60%; /* smaller height so record section fits below */
+  background: #f0f7ff;
+  border-radius: 10px;
+  padding: 30px 40px;
+  text-align: center;
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-bottom: 25px; /* add gap below blue box */
+}
+
+
+.record-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  margin-top: auto; /* keeps it pushed below */
+}
+
+
+/* Scenario badge */
+.scenario-badge {
+  background-color: #d9e8ff;
+  color: #003366;
+  font-weight: bold;
+  padding: 6px 14px;
+  border-radius: 8px;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+.scenario {
+  background-color: #d9e8ff;
+  color: #003366;
+  width: 90%;
+  font-weight: bold;
+  padding: 6px 20px;
+  border-radius: 8px;
+  display: inline-block;
+  margin-bottom: 10px;
+  align-items: center;
+}
+
+.sample-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #003366;
+  margin-bottom: 8px;
+}
+
+.sample-question {
+  background: #fff;
+  padding: 10px;
+  border-radius: 6px;
+  margin: 10px 0;
+  font-weight: 500;
+  border: 1px solid #ddd;
+}
+
+.duration-info {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+/* Record controls */
+.record-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Red circular record button */
+.record-btn {
+  background-color: #0a74f6;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.record-btn:hover { background-color: #c0392b; }
+
+.record-btn.recording {
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(231,76,60,0.7); }
+  70% { box-shadow: 0 0 0 20px rgba(231,76,60,0); }
+  100% { box-shadow: 0 0 0 0 rgba(231,76,60,0); }
+}
+
+.timer {
+  margin-top: 15px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #000;
+}
+
+/* ===== Profile Modal & Toast ===== */
+#profileModal {
+  display: none;
+  position: fixed;
+  top: 60px;
+  right: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  padding: 15px;
+  width: 250px;
+  z-index: 100;
+}
+#profileModal h3 { margin-top: 0; }
+
+#uploadToast {
+  display: none;
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 250px;
+  background: #333;
+  color: #fff;
+  padding: 12px;
+  border-radius: 8px;
+  z-index: 1000;
+  font-family: sans-serif;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+#toastMessage {
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+}
+#toastProgress {
+  width: 0%;
+  height: 8px;
+  background: #4caf50;
+  border-radius: 5px;
+}
+
+/* ===== Scrollbars ===== */
+.left-container::-webkit-scrollbar,
+.main::-webkit-scrollbar {
+  width: 8px;
+}
+.left-container::-webkit-scrollbar-thumb,
+.main::-webkit-scrollbar-thumb {
+  background: #cfd8dc;
+  border-radius: 4px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.btn {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  color: white;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+
+.btn-danger {
+  background: #f39c12;
+}
+
+.set-actions {
+  display: flex;
+  gap: 10px; /* space between buttons */
+  margin-bottom: 10px; /* optional, space below buttons */
+}
+
+.clear-btn {
+  padding: 8px 16px;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.clear-btn:hover {
+  background-color: #d32f2f;
+}
+
+.set-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.toggle-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.recordings-container {
+  margin-top: 5px;
+}
+
+</style>
+
+
+</head>
+<body>
+<header>
+  <h1>🎙️ <span>Voice Sample Recorder</span></h1>
+  <div class="profile-icon" id="profileIcon" style="display:none;" onclick="toggleProfile()">👤</div>
+</header>
+
+<div id="auth-container">
+  <div id="login-box" class="auth-box">
+    <h2>Login</h2>
+    <input type="text" id="login-name" placeholder="Full Name/Username">
+    <input type="password" id="login-password" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <div class="switch-auth">Don't have an account? <a onclick="showSignup()">Sign Up</a></div>
+  </div>
+  <div id="signup-box" class="auth-box" style="display:none;">
+    <h2>Sign Up</h2>
+    <input type="text" id="signup-name" placeholder="Full Name">
+    <input type="number" id="signup-age" placeholder="Age">
+    <select id="signup-gender">
+      <option value="">Select Gender</option>
+      <option>Male</option><option>Female</option><option>Other</option>
+    </select>
+    <input type="text" id="signup-city" placeholder="City">
+    <input type="text" id="signup-language" placeholder="Primary Language">
+    <input type="password" id="signup-password" placeholder="Password">
+    <button onclick="signup()">Sign Up</button>
+    <div class="switch-auth">Already have an account? <a onclick="showLogin()">Login</a></div>
+  </div>
+</div>
+
+<div id="dashboard">
+  <!-- Left Panel -->
+  <div class="left-container">
+    <div class="scenario">Temporary Recordings (12 hrs)</div>
+    <div id="recordingList"></div>
+  </div>
+
+  <!-- Right Panel -->
+  <div class="right-container">
+    <div class="sample-container">
+      <div class="scenario-badge">Ok Google</div>
+      <div class="sample-title" id="sample-title">Ok Google 1 - Sample 1 of 30</div>
+      <div id="question-display" class="sample-question">Ok Google</div>
+      <div class="duration-info">Recording duration: 10 seconds</div>
+      <div id="recording-controls">
+      <button id="clearSetsBtn" class="clear-btn">Clear & Reset</button>
+      </div>
+
+    </div>
+
+    <div class="record-controls">
+      <button id="recordBtn" class="record-btn">Start</button>
+      <div class="timer" id="timer">00:00</div>
+      
+    </div>
+  </div>
+</div>
+
+
+
+    <!-- Public recordings panel -->
+    <div id="publicRecordingsPanel" style="flex:1; display:none; flex-direction:column; gap:10px; overflow-y:auto; max-height:80vh;">
+      <h3>🎧 Public Recordings</h3>
+      <div id="publicRecordingsList"></div>
+    </div>
+  </div>
+</div>
+
+
+
+<div id="profileModal">
+  <h3>👤 Profile</h3>
+  <p><strong>Full Name / Username:</strong> <span id="profileFullname"></span></p>
+  <p><strong>Age:</strong> <span id="profileAge"></span></p>
+  <p><strong>Gender:</strong> <span id="profileGender"></span></p>
+  <p><strong>City:</strong> <span id="profileCity"></span></p>
+  <p><strong>Language:</strong> <span id="profileLanguage"></span></p>
+  <button onclick="logout()" style="width:100%; padding:8px; background:#EA4335; color:white; border:none; border-radius:6px; cursor:pointer;">
+    Logout
+  </button>
+</div>
+
+<div id="uploadToast">
+  <div id="toastMessage">Uploading...</div>
+  <div style="margin-top:8px; background:#555; border-radius:5px; overflow:hidden; height:8px;">
+    <div id="toastProgress"></div>
+  </div>
+</div>
+
+<script>
+let mediaRecorder, audioChunks = [], timerInterval, startTime;
+let currentUser = null;
+const recordBtn = document.getElementById("recordBtn");
+const timer = document.getElementById("timer");
+// Initialize set counter and set size
+let currentSetNumber = parseInt(localStorage.getItem("currentSetNumber") || "1");
+const recordingsPerSet = 30; // adjust per your preference
+
+
+// All possible random questions (20)
+const randomQuestions = [
+  "What's the weather today?",
+  "Set an alarm for 7 AM",
+  "Play some music",
+  "Send a message to John",
+  "Open YouTube",
+  "Tell me a joke",
+  "Turn on the lights",
+  "How's the stock market?",
+  "Translate hello to Spanish",
+  "Define artificial intelligence",
+  "Find nearby restaurants",
+  "Start a timer for 5 minutes",
+  "What's the latest news?",
+  "Check traffic to work",
+  "Remind me to call mom",
+  "Open Spotify",
+  "What's my calendar today?",
+  "Search for cat videos",
+  "Read my emails",
+  "Open Google Maps"
+];
+
+// Generate a 30-question set
+function getQuestionsForSet() {
+  const first10 = Array(10).fill("Ok Google");
+  const remaining20 = [...randomQuestions].sort(() => 0.5 - Math.random()).slice(0, 20);
+  return [...first10, ...remaining20];
+}
+
+// Initialize current set
+let currentSetQuestions = getQuestionsForSet();
+let currentQuestionIndex = 0;
+let currentSet = 1; // starts from Set 1
+const totalSamples = 30; // total questions in a set
+
+
+
+// ---------------- Auth ----------------
+
+function showSignup(){ document.getElementById("login-box").style.display="none"; document.getElementById("signup-box").style.display="block"; }
+function showLogin(){ document.getElementById("signup-box").style.display="none"; document.getElementById("login-box").style.display="block"; }
+
+async function signup(){
+  const username=document.getElementById("signup-name").value.trim();
+  const password=document.getElementById("signup-password").value.trim();
+  const age=document.getElementById("signup-age").value;
+  const gender=document.getElementById("signup-gender").value;
+  const city=document.getElementById("signup-city").value.trim();
+  const language=document.getElementById("signup-language").value.trim();
+  if(!username||!password)return alert("Enter both fields");
+  try{
+    const res=await fetch("/auth/signup", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({username,password,age,gender,city,language})});
+    const data=await res.json();
+    if(data.success){
+  alert("Signup successful! Login now."); 
+  // Assign temporary ID if backend doesn't return one
+  if(!data.user.id) data.user.id = Date.now();
+  showLogin();
+    }
+
+    else alert(data.message||"Signup failed");
+  }catch(e){ console.error(e); alert("Signup error"); }
+}
+
+async function login() {
+  const username = document.getElementById("login-name").value.trim();
+  const password = document.getElementById("login-password").value.trim();
+  if (!username || !password) return alert("Enter both fields");
+
+ try {
+  const res = await fetch("/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password })
+ });
+
+  // Parse JSON safely
+  const data = await res.json();
+
+  if (data.success) {
+    currentUser = data.user;
+    if (!currentUser.id) currentUser.id = Date.now();
+    localStorage.setItem("currentUser", JSON.stringify(currentUser));
+    document.getElementById("auth-container").style.display = "none";
+    document.getElementById("dashboard").style.display = "flex";
+    document.getElementById("profileIcon").style.display = "block";
+    loadProfile();
+    loadRecordings();
+  } else {
+    // Show backend message directly
+    alert(data.message || "Login failed");
+  }
+
+} catch (e) {
+  console.error(e);
+  alert("Network or server error. Please try again.");
+}
+}
+
+
+// ---------------- Profile ----------------
+function toggleProfile() {
+  const modal = document.getElementById("profileModal");
+  modal.style.display = modal.style.display === "block" ? "none" : "block";
+}
+
+function logout() {
+  localStorage.removeItem("currentUser");
+  location.reload();
+}
+
+// ---------------- Recording ----------------
+recordBtn.onclick = async () => {
+  if (recordBtn.classList.contains("recording")) stopRecording();
+  else startRecording();
+};
+
+// ---------------- Recording Title Update ----------------
+function updateSampleTitle() {
+  const sampleTitleEl = document.getElementById("sample-title");
+  const totalSamples = currentSetQuestions.length; // always 30
+
+  // Use the currentSetNumber directly — don't recalc
+  const setNumber = currentSetNumber;
+
+  // Correct sample number within current set (1–30)
+  const sampleNumber = (currentQuestionIndex % totalSamples) + 1;
+
+  // Update the title text
+  sampleTitleEl.textContent = `Ok Google\nSet ${setNumber} - Sample ${sampleNumber} of ${totalSamples}`;
+}
+
+
+/* ------------------------------------------------------
+   🎧 START / STOP RECORDING
+------------------------------------------------------ */
+async function startRecording() {
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  mediaRecorder = new MediaRecorder(stream);
+  audioChunks = [];
+
+  // Push chunks
+  mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+
+  // Handle stop event
+  mediaRecorder.onstop = () => {
+    saveRecording();
+
+    // Move to next question
+    currentQuestionIndex++;
+    const questionDisplay = document.getElementById("question-display");
+    const totalSamples = currentSetQuestions.length;
+    const sampleNumber = currentQuestionIndex % totalSamples;
+    questionDisplay.textContent = currentSetQuestions[sampleNumber];
+
+    updateSampleTitle();
+
+    // Reset button and timer
+    recordBtn.classList.remove("recording");
+    recordBtn.textContent = "Start";
+    clearInterval(timerInterval);
+    timer.textContent = "00:00";
+  };
+
+  mediaRecorder.start();
+
+  // Start button animation
+  recordBtn.classList.add("recording");
+  recordBtn.textContent = "Stop";
+
+  // Timer
+  const maxDuration = 10; // seconds
+  const startTime = Date.now();
+  timerInterval = setInterval(() => {
+    let elapsed = (Date.now() - startTime) / 1000;
+    if (elapsed >= maxDuration) elapsed = maxDuration;
+    const minutes = String(Math.floor(elapsed / 60)).padStart(2, "0");
+    const seconds = String(Math.floor(elapsed % 60)).padStart(2, "0");
+    timer.textContent = `${minutes}:${seconds}`;
+  }, 100);
+
+  // Auto-stop after 10 seconds
+  setTimeout(() => {
+    if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop();
+  }, maxDuration * 1000);
+
+
+recordBtn.classList.add("recording");
+  recordBtn.textContent = "Stop";
+}
+
+function stopRecording() {
+  if (mediaRecorder && mediaRecorder.state === "recording") {
+    mediaRecorder.stop();
+  }
+  clearInterval(timerInterval);
+  timer.textContent = "00:00";
+  recordBtn.classList.remove("recording");
+  recordBtn.textContent = "Start";
+}
+
+
+
+/* ------------------------------------------------------
+   💾 SAVE RECORDING LOCALLY
+------------------------------------------------------ */
+
+function saveRecording() {
+  if (!currentUser) return alert("No user logged in.");
+
+  const blob = new Blob(audioChunks, { type: "audio/mp3" });
+
+  const totalSamples = currentSetQuestions.length; // 30 questions
+  const numberInSet = (currentQuestionIndex % totalSamples) + 1; // 1–30
+  const filename = `Set${currentSetNumber}_Recording${numberInSet} _${currentUser.username} _${currentUser.age} _${currentUser.gender} _${currentUser.language}.mp3`;
+  const question = currentSetQuestions[currentQuestionIndex % totalSamples];
+
+  const reader = new FileReader();
+  reader.onloadend = function () {
+    const base64data = reader.result;
+
+    let allSets = JSON.parse(localStorage.getItem("recordingSets") || "[]");
+    let currentSet = allSets.find(s => s.setNumber === currentSetNumber && s.ownerId === currentUser.id);
+
+    if (!currentSet) {
+      currentSet = {
+        setNumber: currentSetNumber,
+        recordings: [],
+        ownerId: currentUser.id
+      };
+      allSets.push(currentSet);
+    }
+
+    // Only allow max 30 recordings per set
+    if (currentSet.recordings.length < 30) {
+      currentSet.recordings.push({
+        filename,
+        data: base64data,
+        ownerId: currentUser.id,
+        folder: currentUser.username,
+        question
+      });
+    } else {
+      alert("⚠️ This set already has 30 recordings! Move to the next set.");
+      currentSetNumber++; // automatically increment to next set
+      localStorage.setItem("currentSetNumber", currentSetNumber);
+      currentSetQuestions = getQuestionsForSet(); // generate new set questions
+      currentQuestionIndex = 0;
+      updateSampleTitle();
+    }
+
+    localStorage.setItem("recordingSets", JSON.stringify(allSets));
+    loadRecordings();
+    console.log(`Recording saved: ${filename}, Set ${currentSetNumber}`);
+  };
+
+  reader.readAsDataURL(blob);
+  audioChunks = []; // clear chunks
+}
+
+
+/* ------------------------------------------------------
+   📜 LOAD LOCAL RECORDINGS
+------------------------------------------------------ */
+function loadRecordings() {
+  const list = document.getElementById("recordingList");
+  list.innerHTML = "";
+
+  if (!currentUser) return;
+
+
+  const allSets = JSON.parse(localStorage.getItem("recordingSets") || "[]");
+
+  // Only include recordings owned by the current user
+  const userSets = allSets.filter(s => s.ownerId === currentUser.id);
+
+  if (userSets.length === 0) {
+    list.innerHTML = "<p>No temporary recordings yet.</p>";
+    return;
+  }
+
+  userSets.forEach(set => {
+    const setDiv = document.createElement("div");
+    setDiv.className = "recording-set";
+
+    if (set.setNumber === currentSetNumber) {
+    setDiv.classList.add("active");
+  }
+
+    const title = document.createElement("h4");
+    title.textContent = `🎧 Set ${set.setNumber} (${set.recordings.length} recordings)`;
+    setDiv.appendChild(title);
+
+    // Set-level actions
+    const actions = document.createElement("div");
+    actions.className = "set-actions";
+    actions.appendChild(createBtn("Upload All", "upload-btn", () => uploadSet(set)));
+    actions.appendChild(createBtn("Delete All", "delete-btn", () => deleteSet(set.setNumber)));
+    actions.appendChild(createBtn("Download All", "save-btn", () => downloadSet(set)));
+    setDiv.appendChild(actions);
+
+    // Individual recordings
+    set.recordings.forEach((rec, index) => {
+      const recDiv = document.createElement("div");
+      recDiv.className = "recording-item";
+
+      const numberLabel = document.createElement("span");
+        numberLabel.className = "number-label";
+        numberLabel.textContent = index + 1;
+
+      const info = document.createElement("span");
+      info.className = "info";
+      info.textContent = `${rec.filename} - Question: ${rec.question}`;
+
+      const audio = document.createElement("audio");
+      audio.controls = true;
+      audio.src = rec.data;
+
+      const btnDiv = document.createElement("div");
+      btnDiv.className = "recording-buttons";
+
+      btnDiv.appendChild(createBtn("Upload", "upload-btn", () => uploadRecording(rec.filename)));
+      btnDiv.appendChild(createBtn("Delete", "delete-btn", () => deleteRecording(rec.filename)));
+      btnDiv.appendChild(createBtn("Download", "save-btn", () => {
+        const a = document.createElement("a");
+        a.href = rec.data;
+        a.download = rec.filename;
+        a.click();
+      }));
+
+      recDiv.append(numberLabel, info, audio, btnDiv);
+      setDiv.appendChild(recDiv);
+    });
+
+    list.appendChild(setDiv);
+  });
+}
+
+/* ------------------------------------------------------
+   🔹 BUTTON CREATOR UTILITY
+------------------------------------------------------ */
+function createBtn(text, className, onClick) {
+  const btn = document.createElement("button");
+  btn.textContent = text;
+  btn.className = className;
+  btn.onclick = onClick;
+  return btn;
+}
+
+/* ------------------------------------------------------
+   ❌ DELETE SET / RECORDING
+------------------------------------------------------ */
+function deleteSet(setNumber) {
+  if (!confirm(`Delete Set ${setNumber}?`)) return;
+  let allSets = JSON.parse(localStorage.getItem("recordingSets") || "[]");
+  allSets = allSets.filter(s => s.setNumber !== setNumber || s.ownerId !== currentUser.id);
+
+  if (!allSets.some(s => s.ownerId === currentUser.id)) {
+    currentSetNumber = 1;
+    localStorage.setItem("currentSetNumber", currentSetNumber);
+  }
+
+  localStorage.setItem("recordingSets", JSON.stringify(allSets));
+  loadRecordings();
+}
+
+
+function deleteRecording(filename) {
+  let allSets = JSON.parse(localStorage.getItem("recordingSets") || "[]");
+  allSets = allSets.map(set => {
+    set.recordings = set.recordings.filter(r => r.filename !== filename);
+    return set;
+  });
+  allSets = allSets.filter(set => set.recordings.length > 0);
+  localStorage.setItem("recordingSets", JSON.stringify(allSets));
+  loadRecordings();
+  showToast("Recording deleted!");
+}
+
+/* ------------------------------------------------------
+   ⬇️ DOWNLOAD SET
+------------------------------------------------------ */
+function downloadSet(set) {
+  set.recordings.forEach(r => {
+    const a = document.createElement("a");
+    a.href = r.data;
+    a.download = r.filename;
+    a.click();
+  });
+}
+
+/* ------------------------------------------------------
+   ☁️ UPLOAD SET / SINGLE RECORDING TO GOOGLE DRIVE
+------------------------------------------------------ */
+async function uploadSet(set) {
+  showToast(`Uploading Set ${set.setNumber}...`);
+  for (const rec of set.recordings) {
+    await uploadRecording(rec.filename);
+  }
+  showToast(`✅ Set ${set.setNumber} uploaded successfully!`);
+}
+
+async function uploadRecording(filename) {
+  let allSets = JSON.parse(localStorage.getItem("recordingSets") || "[]");
+  const userSets = allSets.filter(s => s.ownerId === currentUser.id);
+
+  let recording = null;
+  userSets.forEach(set => {
+    const found = set.recordings.find(r => r.filename === filename);
+    if (found) recording = found;
+  });
+
+  if (!recording) return alert("Recording not found.");
+
+  showToast(`Uploading `);
+  try {
+    const blob = new Blob([audioChunks], { type: "audio/mp3" }); // or get from localStorage if needed
+    const formData = new FormData();
+    formData.append("audio", blob, recording.filename);
+    formData.append("userId", currentUser.id);
+    formData.append("username", currentUser.username);
+
+    const res = await fetch("/upload", {
+      method: "POST",
+      body: formData
+});
+
+
+    const data = await res.json();
+    if (data.success) showToast(`${filename} uploaded successfully!`);
+    else showToast("Upload failed!");
+  } catch (err) {
+    console.error(err);
+    showToast("⚠️ Upload error!");
+  }
+}
+
+/* ------------------------------------------------------
+   🔔 TOAST NOTIFICATIONS
+------------------------------------------------------ */
+function showToast(message) {
+  const toast = document.getElementById("uploadToast");
+  const msg = document.getElementById("toastMessage");
+  const bar = document.getElementById("toastProgress");
+  msg.textContent = message;
+  toast.style.display = "block";
+  bar.style.width = "0%";
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress += 2;
+    bar.style.width = progress + "%";
+    if (progress >= 100) {
+      clearInterval(interval);
+      setTimeout(() => (toast.style.display = "none"), 500);
+    }
+  }, 30);
+}
+
+/* ------------------------------------------------------
+   👤 PROFILE + AUTH
+------------------------------------------------------ */
+function loadProfile() {
+  if (!currentUser) return;
+  document.getElementById("profileFullname").textContent = currentUser.username;
+  document.getElementById("profileAge").textContent = currentUser.age;
+  document.getElementById("profileGender").textContent = currentUser.gender;
+  document.getElementById("profileCity").textContent = currentUser.city;
+  document.getElementById("profileLanguage").textContent = currentUser.language;
+}
+
+window.addEventListener("DOMContentLoaded", () => { 
+  const loginBtnEl = document.getElementById("loginBtn");
+  const signupBtnEl = document.getElementById("signupBtn");
+
+  // ---------------- Post-login handler ----------------
+  function handlePostLogin() {
+  if (!currentUser) return;
+
+  // Show dashboard, hide login
+  document.getElementById("auth-container").style.display = "none";
+  document.getElementById("dashboard").style.display = "flex";
+  document.getElementById("profileIcon").style.display = "block";
+
+  loadProfile();
+
+  // Load all sets
+  const allSets = JSON.parse(localStorage.getItem("recordingSets") || "[]");
+  const userSets = allSets.filter(s => s.ownerId === currentUser.id);
+
+  let lastSet = null;
+
+  // 🔹 Reset if no sets exist
+  if (!userSets || userSets.length === 0) {
+    currentSetNumber = 1;
+    currentQuestionIndex = 0;
+    currentSetQuestions = getQuestionsForSet();
+    // Clear old stored indices
+    localStorage.setItem("currentSetNumber", currentSetNumber);
+    localStorage.setItem("currentQuestionIndex", currentQuestionIndex);
+  } else {
+    // Continue user's progress
+    const lastSetNumber = Math.max(...userSets.map(s => s.setNumber));
+    lastSet = userSets.find(s => s.setNumber === lastSetNumber);
+
+    if (lastSet.recordings.length < 30) {
+      currentSetNumber = lastSetNumber;
+      currentQuestionIndex = lastSet.recordings.length;
+
+      // Restore same questions as before
+      if (lastSet.recordings.length > 0) {
+        currentSetQuestions = lastSet.recordings.map(r => r.question);
+
+        const missing = 30 - currentSetQuestions.length;
+        if (missing > 0) {
+          const extras = getQuestionsForSet().slice(0, missing);
+          currentSetQuestions = [...currentSetQuestions, ...extras];
+        }
+      } else {
+        currentSetQuestions = getQuestionsForSet();
+      }
+
+    } else {
+      // Finished last set — start new
+      currentSetNumber = lastSetNumber + 1;
+      currentQuestionIndex = 0;
+      currentSetQuestions = getQuestionsForSet();
+    }
+  }
+
+  // Save continuity
+  localStorage.setItem("currentSetNumber", currentSetNumber);
+  localStorage.setItem("currentQuestionIndex", currentQuestionIndex);
+  localStorage.setItem("currentUser", JSON.stringify(currentUser));
+
+  // Display correct question
+  const sampleIndex = currentQuestionIndex % 30;
+  const questionDisplay = document.getElementById("question-display");
+  questionDisplay.textContent = currentSetQuestions[sampleIndex] || currentSetQuestions[0];
+
+  updateSampleTitle();
+  loadRecordings();
+}
+
+
+
+  // ---------------- Restore session on page load ----------------
+  const savedUser = localStorage.getItem("currentUser");
+  if (savedUser) {
+    currentUser = JSON.parse(savedUser);
+    currentSetNumber = parseInt(localStorage.getItem("currentSetNumber")) || 1;
+    currentQuestionIndex = parseInt(localStorage.getItem("currentQuestionIndex")) || 0;
+    handlePostLogin();
+  }
+
+  // ---------------- CLEAR ALL SETS BUTTON ----------------
+  document.getElementById("clearSetsBtn").addEventListener("click", () => {
+    if (!currentUser) return alert("No user logged in.");
+    if (!confirm("This will clear all your recordings and reset to Set 1. Continue?")) return;
+
+    // 🧹 Remove all recording sets for current user
+    let allSets = JSON.parse(localStorage.getItem("recordingSets") || "[]");
+    allSets = allSets.filter(s => s.ownerId !== currentUser.id);
+    localStorage.setItem("recordingSets", JSON.stringify(allSets));
+
+    // 🧠 Reset session values
+    currentSetNumber = 1;
+    currentQuestionIndex = 0;
+    currentSetQuestions = getQuestionsForSet();
+
+    // 🧠 Update localStorage for persistence
+    localStorage.setItem("currentSetNumber", currentSetNumber);
+    localStorage.setItem("currentQuestionIndex", currentQuestionIndex);
+
+    // 🖥️ Update UI
+    const questionDisplay = document.getElementById("question-display");
+    questionDisplay.textContent = currentSetQuestions[0];
+    updateSampleTitle();
+
+    // Clear left container display
+    const list = document.getElementById("recordingList");
+    list.innerHTML = "<p>No temporary recordings yet.</p>";
+
+    showToast("✅ All recordings cleared. Back to Set 1.");
+  });
+});
+
+
+
+</script>
+</body>
+</html>
