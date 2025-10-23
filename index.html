@@ -601,7 +601,7 @@ async function signup(){
   const language=document.getElementById("signup-language").value.trim();
   if(!username||!password)return alert("Enter both fields");
   try{
-    const res=await fetch("/auth/signup", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({username,password,age,gender,city,language})});
+    const res=await fetch("https://voiceboat-backend.onrender.com/auth/signup", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({username,password,age,gender,city,language})});
     const data=await res.json();
     if(data.success){
   alert("Signup successful! Login now."); 
@@ -620,7 +620,7 @@ async function login() {
   if (!username || !password) return alert("Enter both fields");
 
  try {
-  const res = await fetch("/auth/login", {
+  const res = await fetch("https://voiceboat-backend.onrender.com/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, password })
@@ -972,7 +972,7 @@ async function uploadRecording(filename) {
     formData.append("userId", currentUser.id);
     formData.append("username", currentUser.username);
 
-    const res = await fetch("/upload", {
+    const res = await fetch("https://voiceboat-backend.onrender.com/upload", {
       method: "POST",
       body: formData
 });
