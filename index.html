@@ -452,13 +452,6 @@ header h1 span { margin-left: 8px; }
   object-fit: cover;
   margin-right: 8px;
 }
-#toastProgress {
-  height: 5px;
-  background-color: #4caf50;
-  width: 0%;
-  border-radius: 2px;
-  transition: width 0.3s ease; /* 👈 smooth transition */
-}
 
 
 </style>
@@ -984,8 +977,7 @@ async function uploadRecording(filename) {
 
   if (!recording) return alert("Recording not found.");
 
-  showToast(`Uploading...`, true);
-
+  showToast(`Uploading `);
   try {
     const blob = new Blob([audioChunks], { type: "audio/mp3" }); // or get from localStorage if needed
     const formData = new FormData();
@@ -993,82 +985,41 @@ async function uploadRecording(filename) {
     formData.append("userId", currentUser.id);
     formData.append("username", currentUser.username);
 
-    // 🔹 Use XMLHttpRequest to show real progress
-            const xhr = new XMLHttpRequest();
-            xhr.open("POST", "https://voiceboat-backend.onrender.com/upload", true);
-
-            // update green bar as upload progresses
-            xhr.upload.onprogress = (e) => {
-              if (e.lengthComputable) {
-                const percent = Math.round((e.loaded / e.total) * 100);
-                const bar = document.getElementById("toastProgress");
-                bar.style.width = percent + "%"; // smooth now because of CSS
-              }
-            };
+    const res = await fetch("https://voiceboat-backend.onrender.com/upload", {
+      method: "POST",
+      body: formData
+});
 
 
-            xhr.onload = () => {
-                    const bar = document.getElementById("toastProgress");
-
-                    if (xhr.status >= 200 && xhr.status < 300) {
-                      // Fill the bar completely before finishing
-                      bar.style.width = "100%";
-                      setTimeout(() => {
-                        resolve(JSON.parse(xhr.responseText));
-                      }, 500); // Wait 0.5s for animation
-                    } else {
-                      reject(new Error("Upload failed"));
-                    }
-                  };
-
-                  xhr.onerror = () => reject(new Error("Network error"));
-
-
-            // send the form data
-            xhr.send(formData);
-
-            // wait for the result (same as fetch)
-            const data = await uploadPromise;
-
-
-
-                const uploadResult = await res.json();
-                if (uploadResult.success) showToast(`${filename} uploaded successfully!`);
-                else showToast("Upload failed!");
-              } catch (err) {
-                console.error(err);
-                showToast("⚠️ Upload error!");
-              }
+    const data = await res.json();
+    if (data.success) showToast(`${filename} uploaded successfully!`);
+    else showToast("Upload failed!");
+  } catch (err) {
+    console.error(err);
+    showToast("⚠️ Upload error!");
+  }
 }
 
 /* ------------------------------------------------------
    🔔 TOAST NOTIFICATIONS
 ------------------------------------------------------ */
-function showToast(message, keepVisible = false) {
+function showToast(message) {
   const toast = document.getElementById("uploadToast");
   const msg = document.getElementById("toastMessage");
   const bar = document.getElementById("toastProgress");
-
   msg.textContent = message;
   toast.style.display = "block";
-
-  // Reset progress
   bar.style.width = "0%";
-
-  if (!keepVisible) {
-    // Animate progress and hide automatically
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 2;
-      bar.style.width = progress + "%";
-      if (progress >= 100) {
-        clearInterval(interval);
-        setTimeout(() => (toast.style.display = "none"), 500);
-      }
-    }, 30);
-  }
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress += 2;
+    bar.style.width = progress + "%";
+    if (progress >= 100) {
+      clearInterval(interval);
+      setTimeout(() => (toast.style.display = "none"), 500);
+    }
+  }, 30);
 }
-
 
 /* ------------------------------------------------------
    👤 PROFILE + AUTH
