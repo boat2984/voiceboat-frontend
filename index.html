@@ -1016,7 +1016,7 @@ function showToast(message) {
     bar.style.width = progress + "%";
     if (progress >= 100) {
       clearInterval(interval);
-      setTimeout(() => (toast.style.display = "none"), 1500);
+      setTimeout(() => (toast.style.display = "none"), 500);
     }
   }, 30);
 }
