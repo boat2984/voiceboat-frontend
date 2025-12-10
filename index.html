@@ -979,7 +979,11 @@ async function uploadRecording(filename) {
 
   showToast(`Uploading `);
   try {
-    const blob = new Blob([audioChunks], { type: "audio/mp3" }); // or get from localStorage if needed
+    const base64 = recording.data.split(",")[1];  
+    const byteCharacters = atob(base64);
+    const byteNumbers = Array.from(byteCharacters).map(c => c.charCodeAt(0));
+    const blob = new Blob([new Uint8Array(byteNumbers)], { type: "audio/mp3" });
+ // or get from localStorage if needed
     const formData = new FormData();
     formData.append("audio", blob, recording.filename);
     formData.append("userId", currentUser.id);
